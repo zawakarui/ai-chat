@@ -144,6 +144,7 @@ deploy-run:
 		--memory 512Mi \
 		--cpu 1 \
 		--max-instances 10 \
+		--min-instances 0 \
 		--timeout 60s \
 		--set-env-vars ANTHROPIC_API_KEY=$(ANTHROPIC_API_KEY)
 
