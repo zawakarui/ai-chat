@@ -39,7 +39,8 @@ jobs:
       - name: Build and Push Docker image
         run: |
           gcloud builds submit --tag gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
-            --tag gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:latest
+            --tag gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:latest \
+            --quiet
 
       # Cloud Runにデプロイ
       - name: Deploy to Cloud Run
