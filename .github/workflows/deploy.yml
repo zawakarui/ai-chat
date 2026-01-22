@@ -1,0 +1,63 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: ai-chat-production-484909
+  REGION: asia-northeast1
+  SERVICE_NAME: ai-chat
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Workload Identity Federationで認証
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/132688141014/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: 'github-actions-deployer@ai-chat-production-484909.iam.gserviceaccount.com'
+
+      # Cloud SDKをセットアップ
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      # Dockerイメージをビルド・プッシュ
+      - name: Build and Push Docker image
+        run: |
+          gcloud builds submit --tag gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            --tag gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:latest
+
+      # Cloud Runにデプロイ
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated \
+            --memory 512Mi \
+            --cpu 1 \
+            --max-instances 10 \
+            --min-instances 0 \
+            --timeout 60s \
+            --set-env-vars ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+
+      # デプロイ結果を表示
+      - name: Show deployment info
+        run: |
+          echo "✅ Deployment successful!"
+          echo "Service URL: $(gcloud run services describe ${{ env.SERVICE_NAME }} --region ${{ env.REGION }} --format 'value(status.url)')"
