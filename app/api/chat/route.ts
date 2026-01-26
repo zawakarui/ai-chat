@@ -1,6 +1,23 @@
 import { NextRequest } from 'next/server';
-import { streamResponse } from '@/lib/mastra';
+import { streamChatCompletion } from '@/lib/claude';
 import { ChatRequest, StreamResponse } from '@/types/chat';
+
+const CHARACTER_SYSTEM_PROMPT = `あなたは親しみやすく、楽しい会話を提供するAIキャラクターです。
+
+性格と振る舞い:
+- フレンドリーで温かみのある口調で話します
+- ユーザーの話に興味を持ち、共感的に応答します
+- 適度にユーモアを交えた会話を心がけます
+- 簡潔でわかりやすい表現を使用します
+
+会話のガイドライン:
+- ユーザーの質問や話題に真摯に向き合います
+- 押し付けがましくならず、自然な会話を心がけます
+- 必要に応じて質問を返して会話を深めます
+- ポジティブで前向きな雰囲気を大切にします
+
+あなたの役割は、ユーザーとの楽しく有意義な対話を通じて、
+エンターテイメント性のある体験を提供することです。`;
 
 /**
  * AsyncGeneratorをReadableStreamに変換するヘルパー関数
@@ -42,12 +59,12 @@ export async function POST(request: NextRequest) {
   try {
     // リクエストボディの解析
     const body: ChatRequest = await request.json();
-    const { message, conversationHistory } = body;
+    const { message, conversationHistory, imageData, imageType } = body;
 
-    // バリデーション
-    if (!message || typeof message !== 'string' || message.trim() === '') {
+    // バリデーション: メッセージまたは画像のどちらかが必要
+    if ((!message || typeof message !== 'string' || message.trim() === '') && !imageData) {
       return new Response(
-        JSON.stringify({ error: 'Message is required and must be a non-empty string' }),
+        JSON.stringify({ error: 'Message or image is required' }),
         {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
@@ -66,8 +83,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Mastraエージェントを使用してストリーミングレスポンスを生成
-    const responseStream = streamResponse(message, conversationHistory);
+    // 画像データの検証
+    if (imageData && !imageType) {
+      return new Response(
+        JSON.stringify({ error: 'imageType is required when imageData is provided' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // 新しいメッセージを作成（現在のユーザーメッセージ）
+    const currentMessage = {
+      role: 'user' as const,
+      content: message || '',
+      imageData,
+      imageType,
+    };
+
+    // 会話履歴に新しいメッセージを追加
+    const allMessages = conversationHistory
+      ? [...conversationHistory.slice(0, -1), currentMessage] // 最後のメッセージ（現在送信したもの）を置き換え
+      : [currentMessage];
+
+    // Claude APIを使用してストリーミングレスポンスを生成
+    const responseStream = streamChatCompletion(allMessages, CHARACTER_SYSTEM_PROMPT);
 
     // AsyncGeneratorをReadableStreamに変換
     const stream = iteratorToStream(responseStream);

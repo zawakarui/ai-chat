@@ -56,9 +56,103 @@
   text-align: right;
 }
 
+/* 画像コンテナ */
+.imageContainer {
+  margin-bottom: 0.5rem;
+}
+
+.messageImage {
+  display: block;
+  max-width: 100%;
+  width: 400px;
+  height: auto;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.messageImage:hover {
+  opacity: 0.9;
+}
+
+.imageCaption {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  word-break: break-all;
+}
+
+/* 画像拡大モーダル */
+.imageModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.imageModalContent {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imageModalImage {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.closeButton {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #000;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.closeButton:hover {
+  background-color: white;
+  transform: scale(1.1);
+}
+
+.closeIcon {
+  width: 20px;
+  height: 20px;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .bubble {
     max-width: 85%;
+  }
+
+  .messageImage {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .closeButton {
+    top: 10px;
+    right: 10px;
   }
 }

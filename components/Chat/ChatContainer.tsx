@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message, ChatSession } from '@/types/chat';
-import { loadSession, saveSession, addMessage, initializeSession } from '@/lib/session';
+import { loadSession, saveSession, initializeSession } from '@/lib/session';
 import { sendChatMessage } from '@/lib/chat-api';
 import MessageBubble from '@/components/Message/MessageBubble';
 import MessageInput from '@/components/Input/MessageInput';
@@ -34,13 +34,32 @@ export default function ChatContainer() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingMessage]);
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (
+    content: string,
+    imageData?: string,
+    imageType?: string,
+    imageName?: string
+  ) => {
     if (!session || isLoading) return;
 
     // ユーザーメッセージを追加
-    const updatedSession = addMessage(session, 'user', content);
+    const userMessage: Message = {
+      id: uuidv4(),
+      role: 'user',
+      content,
+      timestamp: new Date().toISOString(),
+      imageData,
+      imageType,
+      imageName,
+    };
+
+    const updatedSession: ChatSession = {
+      ...session,
+      messages: [...session.messages, userMessage],
+    };
     setSession(updatedSession);
     setMessages(updatedSession.messages);
+    saveSession(updatedSession);
 
     setIsLoading(true);
     setStreamingMessage('');
@@ -50,12 +69,16 @@ export default function ChatContainer() {
     const conversationHistory = updatedSession.messages.map((msg) => ({
       role: msg.role,
       content: msg.content,
+      imageData: msg.imageData,
+      imageType: msg.imageType,
     }));
 
     // AIレスポンスを受信
     await sendChatMessage(
       content,
       conversationHistory,
+      imageData,
+      imageType,
       // onToken: ストリーミング中のトークンを追加
       (token: string) => {
         streamingContentRef.current += token;

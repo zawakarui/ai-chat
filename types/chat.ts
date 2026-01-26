@@ -6,6 +6,9 @@ export interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  imageData?: string;     // base64エンコード画像
+  imageName?: string;     // ファイル名
+  imageType?: string;     // MIMEタイプ (image/jpeg, image/png, etc.)
 }
 
 /**
@@ -25,7 +28,11 @@ export interface ChatRequest {
   conversationHistory: Array<{
     role: 'user' | 'assistant';
     content: string;
+    imageData?: string;
+    imageType?: string;
   }>;
+  imageData?: string;     // 送信する画像のbase64データ
+  imageType?: string;     // 送信する画像のMIMEタイプ
 }
 
 /**

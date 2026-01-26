@@ -1,9 +1,19 @@
+.inputWrapper {
+  background-color: white;
+  border-top: 1px solid #e0e0e0;
+}
+
 .inputContainer {
   display: flex;
   gap: 0.5rem;
   padding: 1rem;
-  background-color: white;
-  border-top: 1px solid #e0e0e0;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.inputContainer.dragging {
+  background-color: #f0f8ff;
+  border: 2px dashed #007aff;
 }
 
 .textarea {
@@ -65,6 +75,121 @@
   height: 20px;
 }
 
+/* 隠しファイル入力 */
+.fileInput {
+  display: none;
+}
+
+/* 画像選択ボタン */
+.imageButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background-color: transparent;
+  color: #007aff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  flex-shrink: 0;
+}
+
+.imageButton:hover:not(:disabled) {
+  background-color: #f0f0f0;
+  transform: scale(1.05);
+}
+
+.imageButton:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.imageButton:disabled {
+  color: #c0c0c0;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.imageIcon {
+  width: 24px;
+  height: 24px;
+}
+
+/* エラーメッセージ */
+.errorMessage {
+  padding: 0.75rem 1rem;
+  background-color: #ffebee;
+  color: #c62828;
+  font-size: 0.875rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* 画像プレビュー */
+.imagePreviewContainer {
+  padding: 1rem;
+  padding-bottom: 0;
+}
+
+.imagePreview {
+  position: relative;
+  display: inline-block;
+  max-width: 200px;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid #d0d0d0;
+}
+
+.imagePreview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 150px;
+  object-fit: cover;
+}
+
+.removeImageButton {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 28px;
+  height: 28px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.removeImageButton:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+.removeImageButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.removeIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.imageName {
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  color: #666;
+  background-color: #f5f5f5;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .inputContainer {
@@ -73,5 +198,13 @@
 
   .textarea {
     font-size: 16px; /* iOS のズーム防止 */
+  }
+
+  .imagePreview {
+    max-width: 150px;
+  }
+
+  .imagePreview img {
+    max-height: 100px;
   }
 }

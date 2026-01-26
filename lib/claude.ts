@@ -11,18 +11,57 @@ export const anthropic = new Anthropic({
  * Claude APIへメッセージを送信してストリーミングレスポンスを取得
  */
 export async function* streamChatCompletion(
-  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+  messages: Array<{
+    role: 'user' | 'assistant';
+    content: string;
+    imageData?: string;
+    imageType?: string
+  }>,
   systemPrompt?: string
 ): AsyncGenerator<string, void, unknown> {
   try {
+    // メッセージを Claude API のマルチモーダル形式に変換
+    const formattedMessages = messages.map((msg) => {
+      if (msg.imageData && msg.imageType) {
+        // 画像を含むメッセージ
+        const content: Array<any> = [];
+
+        // 画像を追加
+        content.push({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: msg.imageType,
+            data: msg.imageData,
+          },
+        });
+
+        // テキストがある場合は追加
+        if (msg.content) {
+          content.push({
+            type: 'text',
+            text: msg.content,
+          });
+        }
+
+        return {
+          role: msg.role,
+          content,
+        };
+      } else {
+        // テキストのみのメッセージ
+        return {
+          role: msg.role,
+          content: msg.content,
+        };
+      }
+    });
+
     const stream = anthropic.messages.stream({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 4096,
       system: systemPrompt || 'You are a helpful AI assistant.',
-      messages: messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      })),
+      messages: formattedMessages,
     });
 
     // ストリーミングイベントを処理
@@ -43,18 +82,57 @@ export async function* streamChatCompletion(
  * Claude APIへメッセージを送信（非ストリーミング）
  */
 export async function sendMessage(
-  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+  messages: Array<{
+    role: 'user' | 'assistant';
+    content: string;
+    imageData?: string;
+    imageType?: string
+  }>,
   systemPrompt?: string
 ): Promise<string> {
   try {
+    // メッセージを Claude API のマルチモーダル形式に変換
+    const formattedMessages = messages.map((msg) => {
+      if (msg.imageData && msg.imageType) {
+        // 画像を含むメッセージ
+        const content: Array<any> = [];
+
+        // 画像を追加
+        content.push({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: msg.imageType,
+            data: msg.imageData,
+          },
+        });
+
+        // テキストがある場合は追加
+        if (msg.content) {
+          content.push({
+            type: 'text',
+            text: msg.content,
+          });
+        }
+
+        return {
+          role: msg.role,
+          content,
+        };
+      } else {
+        // テキストのみのメッセージ
+        return {
+          role: msg.role,
+          content: msg.content,
+        };
+      }
+    });
+
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 4096,
       system: systemPrompt || 'You are a helpful AI assistant.',
-      messages: messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      })),
+      messages: formattedMessages,
     });
 
     // テキストコンテンツを抽出

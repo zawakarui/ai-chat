@@ -5,15 +5,19 @@ import { ChatRequest, StreamResponse } from '@/types/chat';
  */
 export async function sendChatMessage(
   message: string,
-  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
-  onToken: (token: string) => void,
-  onComplete: () => void,
-  onError: (error: string) => void
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string; imageData?: string; imageType?: string }>,
+  imageData?: string,
+  imageType?: string,
+  onToken?: (token: string) => void,
+  onComplete?: () => void,
+  onError?: (error: string) => void
 ): Promise<void> {
   try {
     const requestBody: ChatRequest = {
       message,
       conversationHistory,
+      imageData,
+      imageType,
     };
 
     const response = await fetch('/api/chat', {
@@ -60,9 +64,9 @@ export async function sendChatMessage(
             const data: StreamResponse = JSON.parse(jsonStr);
 
             if (data.type === 'token' && data.content) {
-              onToken(data.content);
+              onToken?.(data.content);
             } else if (data.type === 'error') {
-              onError(data.error || 'Unknown error');
+              onError?.(data.error || 'Unknown error');
               return;
             }
           } catch (parseError) {
@@ -73,9 +77,9 @@ export async function sendChatMessage(
     }
 
     // ストリーミング完了
-    onComplete();
+    onComplete?.();
   } catch (error) {
     console.error('Error in sendChatMessage:', error);
-    onError(error instanceof Error ? error.message : 'Unknown error occurred');
+    onError?.(error instanceof Error ? error.message : 'Unknown error occurred');
   }
 }
